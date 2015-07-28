@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Bienvenidos al Chat</title>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"> </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+         //Inicializamos nuestras variables
+         var socket = null;
+         var user = null;
+
+         $(document).ready(function(){
+         $("#chat").hide();//Ocultamos por defecto el layer del chat
+
+         //controlamos el evento del boton de iniciar chat
+         $("#btnJoin").click(function(){
+         socket = io.connect('http://localhost:8080');//iniciamos conexion con el server
+         user = $("#user").val();//guardamos el usuario insertado en memoria
+         socket.emit('login',user);//llamamos el evento login del server
+
+         //Controlamos el evento cuando el servidor responda
+         socket.on('login', function (msg) {
+          console.log('Received Login: %s', msg);
+         });
+
+         //Llamamos el evento de list para obtener los usuarios conectados
+         socket.emit('list',"list");
+
+         //Controlamos la respuesta del server
+         socket.on('list', function (msg) {
+          console.log('Received List: %s', msg);
+          $(".leftSide").html(msg);
+         });
+
+         //Controlamos el evento message que enviará el servidor
+         socket.on('message', function (msg) {
+          console.log('Received Message: %s', msg);
+          $(".rightSide").append(msg.text);
+         });
+
+         $("#chat").show();
+         $(".user").hide();
+
+         });
+
+         $("#send").click(function(){
+         socket.emit('message',{"user": user,"message": $("#textSend").val()});
+         });
+
+         });
+      </script>
+    <style>
+        .leftSide{ float:left; min-width:25%; min-height:400px; margin:10px; border:1px solid #333;background-color:#e9eaed;padding:15px;}
+        .rightSide{ float:right; min-width:65%;min-height:400px; margin:10px;border:1px solid #333;background-color:#fefdca;padding:15px;}
+        .button { border: 1px solid #dedede; border-radius: 3px; color: #3b5998; display: inline-block;
+        font: bold 12px/12px HelveticaNeue, Arial;padding: 8px 11px;text-decoration: none;}
+    </style>
+</head>
+<body>
+<h2 style="color: #3b5998;">Bienvenidos al Chat</h2>
+<section class="user">
+    <label>Nombre: </label> <input type="text" id="user"/>
+    <input type="button" value="Ingresar" id="btnJoin" class="button"/>
+</section>
+<section id="chat">
+    <section class="leftSide"></section>
+    <section class="rightSide"></section>
+    <section>
+        <input type="button" value="Enviar" id="send" style="margin:10px; padding:10px;" class="button"/>
+        <input type="text" id="textSend" style="margin:10px; background-color:#fefdca;"/>
+    </section>
+</section>
+</body>
+</html>
